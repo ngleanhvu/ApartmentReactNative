@@ -1,4 +1,4 @@
-import { use, useState } from "react";
+import { use, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import styles from "../../styles/styles";
 import Styles from "./Styles";
 import * as ImagePicker from "expo-image-picker";
 import APIs, { authApis, endpoints } from "../../configs/APIs";
+import _ from "lodash";
 
 const ActiveUser = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
@@ -27,44 +28,50 @@ const ActiveUser = ({ navigation }) => {
     });
   };
 
-  const activeUser = async () => {
-    setLoading(true);
-    try {
-      let form = new FormData();
-      for (let key in user) {
-        if (key === "avatar") {
-          form.append("avatar", {
-            uri: user["avatar"].uri,
-            name: user["avatar"].fileName,
-            type: user["avatar"].uri.type,
-          });
-        } else {
-          form.append(key, user[key]);
+  const activeUser = useCallback(
+    _.debounce(async () => {
+      setLoading(true);
+      try {
+        let form = new FormData();
+        for (let key in user) {
+          if (key === "avatar") {
+            form.append("avatar", {
+              uri: user["avatar"].uri,
+              name: user["avatar"].fileName,
+              type: user["avatar"].uri.type,
+            });
+          } else {
+            form.append(key, user[key]);
+          }
         }
-      }
-      setTimeout(async () => {
+
         const res = await APIs.post(endpoints["active-user"], form, {
           headers: {
             "Content-Type": "multipart/form-data",
           },
         });
-        console.log(res);
+
         if (res.status === 200) {
           alert("Thành công! Vui lòng đăng nhập.");
           navigation.navigate("Login");
         } else if (res.status === 202) {
-          console.log(res);
           alert("Tài khoản đã kích hoạt trước đó");
           navigation.navigate("Login");
         }
-      }, 2000);
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setLoading(false);
-      setUser("");
-    }
-  };
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setLoading(false);
+        setUser({
+          phone: "",
+          password: "",
+          retype_password: "",
+          avatar: "",
+        });
+      }
+    }, 1000),
+    [user, navigation]
+  );
 
   const pickImage = async () => {
     let { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();

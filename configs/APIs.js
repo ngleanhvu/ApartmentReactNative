@@ -7,6 +7,7 @@ export const endpoints = {
   login: "/o/token/",
   "current-user": "/users/current-user/",
   "active-user": "/users/active-user/",
+  "monthly-fees": "/monthly-fees/",
 };
 
 export const authApis = (token) => {

@@ -10,7 +10,7 @@ import Home from "./components/Home/Home";
 import MyUserReducer from "./reducers/MyReducers";
 import Contexts from "./configs/Contexts";
 import ActiveUser from "./components/User/ActiveUser";
-import Fee from "./components/Fee/Fee";
+import PayMonthlyFee from "./components/MonthlyFee/PayMonthlyFee";
 import Login from "./components/User/Login";
 
 const Drawer = createDrawerNavigator();
@@ -47,7 +47,7 @@ const App = () => {
           {user ? (
             <>
               <Drawer.Screen name={user.username} component={Home} />
-              <Drawer.Screen name="Fee" component={Fee} />
+              <Drawer.Screen name="Pay monthly fee" component={PayMonthlyFee} />
             </>
           ) : (
             <>
