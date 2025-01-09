@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 
-const HOST = "http://localhost:8000/";
+const HOST = "http://10.0.2.2:8000/";
 
 export const endpoints = {
   login: "/o/token/",

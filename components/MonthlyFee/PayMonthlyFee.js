@@ -57,6 +57,7 @@ const PayMonthlyFee = ({ navigation }) => {
       if (res.data && res.data.clientSecret) {
         const { error } = await initPaymentSheet({
           paymentIntentClientSecret: res.data.clientSecret,
+          merchantDisplayName: 'Stripe',
         });
 
         if (error) {
@@ -177,13 +178,12 @@ const PayMonthlyFee = ({ navigation }) => {
       <Text style={Styles.title}>Các khoản phí chưa đóng</Text>
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />
-      ) : monthlyFees.length === 0 ? (
-        <Text>Danh sách trống</Text>
       ) : (
         <FlatList
           data={monthlyFees}
           renderItem={renderItem}
           keyExtractor={(item) => item.id.toString()}
+          ListEmptyComponent={<Text>Danh sách trống</Text>}  // Hiển thị khi danh sách trống
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
