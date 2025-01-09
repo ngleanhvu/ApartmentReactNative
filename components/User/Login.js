@@ -49,6 +49,7 @@ const Login = ({ navigation }) => {
           }
         }, 1000);
       } catch (e) {
+        console.error(e);
         alert("Đăng nhập thất bại!");
       } finally {
         setLoading(false);

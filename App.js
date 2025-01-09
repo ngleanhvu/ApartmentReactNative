@@ -12,6 +12,7 @@ import Contexts from "./configs/Contexts";
 import ActiveUser from "./components/User/ActiveUser";
 import PayMonthlyFee from "./components/MonthlyFee/PayMonthlyFee";
 import Login from "./components/User/Login";
+import { StripeProvider } from "@stripe/stripe-react-native";
 
 const Drawer = createDrawerNavigator();
 
@@ -37,27 +38,32 @@ const App = () => {
   const [user, dispatch] = useReducer(MyUserReducer, null);
 
   return (
-    <Contexts.Provider value={[user, dispatch]}>
-      <NavigationContainer>
-        <Drawer.Navigator
-          initialRouteName="Home"
-          drawerContent={(props) => <CustomDrawerContent {...props} />}
-        >
-          <Drawer.Screen name="Home" component={Home} />
-          {user ? (
-            <>
-              <Drawer.Screen name={user.username} component={Home} />
-              <Drawer.Screen name="Pay monthly fee" component={PayMonthlyFee} />
-            </>
-          ) : (
-            <>
-              <Drawer.Screen name="Login" component={Login} />
-              <Drawer.Screen name="Active user" component={ActiveUser} />
-            </>
-          )}
-        </Drawer.Navigator>
-      </NavigationContainer>
-    </Contexts.Provider>
+    <StripeProvider publishableKey="pk_test_51QVllgLGRlPpjKfjb0kJx1duZJodKVhBPgUrlEqAWHSweobrx0xToWMeFmfwbfMQ72QOzSOTnDyqjR5Fq6XODa1H007P3RGFcj">
+      <Contexts.Provider value={[user, dispatch]}>
+        <NavigationContainer>
+          <Drawer.Navigator
+            initialRouteName="Home"
+            drawerContent={(props) => <CustomDrawerContent {...props} />}
+          >
+            <Drawer.Screen name="Home" component={Home} />
+            {user ? (
+              <>
+                <Drawer.Screen name={user.username} component={Home} />
+                <Drawer.Screen
+                  name="Pay monthly fee"
+                  component={PayMonthlyFee}
+                />
+              </>
+            ) : (
+              <>
+                <Drawer.Screen name="Login" component={Login} />
+                <Drawer.Screen name="Active user" component={ActiveUser} />
+              </>
+            )}
+          </Drawer.Navigator>
+        </NavigationContainer>
+      </Contexts.Provider>
+    </StripeProvider>
   );
 };
 
