@@ -18,6 +18,7 @@ import { useStripe } from "@stripe/stripe-react-native";
 import Modal from "react-native-modal";
 import * as ImagePicker from "expo-image-picker";
 import _ from "lodash";
+import { Ionicons } from '@expo/vector-icons';
 
 const PayMonthlyFee = ({ navigation }) => {
   const [monthlyFees, setMonthlyFees] = useState([]);
@@ -27,6 +28,7 @@ const PayMonthlyFee = ({ navigation }) => {
   const [thumbnail, setThumbnail] = useState(null);
   const [totalAmount, setTotalAmount] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedItems, setSelectedItems] = useState([]);
 
   const loadPendingMonthlyFees = async () => {
     setLoading(true);
@@ -52,7 +54,9 @@ const PayMonthlyFee = ({ navigation }) => {
       const token = await AsyncStorage.getItem("access_token");
       const api = authApis(token);
       const url = `${endpoints["transaction"]}stripe/`;
-      const res = await api.post(url);
+      const res = await api.post(url, {
+        ids: JSON.stringify(selectedItems)
+      });
 
       if (res.data && res.data.clientSecret) {
         const { error } = await initPaymentSheet({
@@ -117,6 +121,8 @@ const PayMonthlyFee = ({ navigation }) => {
           type: "image/jpeg",
         });
 
+        form.append("ids", JSON.stringify(selectedItems))
+
         const token = await AsyncStorage.getItem("access_token");
         const result = await APIs.post(
           `${endpoints["transaction"]}momo/`,
@@ -143,11 +149,10 @@ const PayMonthlyFee = ({ navigation }) => {
         setThumbnail(null);
       }
     }, 1000),
-    [thumbnail]
   );
 
   const toggleModal = () => {
-    const total = monthlyFees.reduce((sum, item) => sum + item.amount, 0);
+    const total = monthlyFees.filter(item => selectedItems.includes(item.id)).reduce((sum, item) => sum + item.amount, 0);
     setTotalAmount(total);
     setModalVisible(!isModalVisible);
   };
@@ -156,6 +161,7 @@ const PayMonthlyFee = ({ navigation }) => {
     loadPendingMonthlyFees();
   }, []);
 
+
   const renderItem = ({ item }) => (
     <View key={item.id} style={Styles.fee}>
       <Text style={Styles.text}>{item.amount.toLocaleString("vi-VN")} VNĐ</Text>
@@ -163,14 +169,33 @@ const PayMonthlyFee = ({ navigation }) => {
       <Text style={Styles.text}>
         Tháng: {new Date(item.created_date).getMonth() + 1}
       </Text>
+      <TouchableOpacity onPress={() => toggleSelection(item.id)}>
+      <Ionicons
+        name={selectedItems.includes(item.id) ? "checkbox" : "checkbox-outline"}
+        size={24}
+        color="white"
+      />
+    </TouchableOpacity>
     </View>
   );
+
+  const toggleSelection = (id) => {
+    setSelectedItems((prevSelectedItems) => {
+      if (prevSelectedItems.includes(id)) {
+        return prevSelectedItems.filter(itemId => itemId !== id);  // Bỏ chọn item
+      } else {
+        return [...prevSelectedItems, id];  // Chọn item
+      }
+    });
+  };
 
   const onRefresh = async () => {
     setRefreshing(true);
     await loadPendingMonthlyFees();
+    setSelectedItems([])
     setRefreshing(false);
   };
+
 
   return (
     <View style={styles.container}>
@@ -196,7 +221,7 @@ const PayMonthlyFee = ({ navigation }) => {
         <Text style={[Styles.text, Styles.text_center]}>Stripe</Text>
       </TouchableOpacity>
       <TouchableOpacity style={Styles.button_momo} onPress={toggleModal}>
-        <Text style={[Styles.text_center, Styles.text]}>Hiện Form</Text>
+        <Text style={[Styles.text_center, Styles.text]}>Momo</Text>
       </TouchableOpacity>
 
       <Modal
