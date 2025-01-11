@@ -13,6 +13,27 @@ import ActiveUser from "./components/User/ActiveUser";
 import PayMonthlyFee from "./components/MonthlyFee/PayMonthlyFee";
 import Login from "./components/User/Login";
 import { StripeProvider } from "@stripe/stripe-react-native";
+import MonthlyFee from "./components/MonthlyFee/MonthlyFee";
+import Transaction from "./components/MonthlyFee/MonthlyFee";
+import MonthlyFeeDetail from "./components/MonthlyFee/MonthlyFeeDetail";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+
+const Stack = createNativeStackNavigator();
+
+const TransactionStack = () => (
+  <Stack.Navigator>
+    <Stack.Screen
+      name="Monthly fee"
+      component={MonthlyFee}
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen
+      name="Monthly fee detail"
+      component={MonthlyFeeDetail}
+      options={{ headerShown: false }}
+    />
+  </Stack.Navigator>
+);
 
 const Drawer = createDrawerNavigator();
 
@@ -26,7 +47,7 @@ const CustomDrawerContent = (props) => {
         <Button
           title="Logout"
           onPress={() => {
-            dispatch({ type: "logout" }); // Cập nhật trạng thái đăng xuất
+            dispatch({ type: "logout" });
           }}
         />
       )}
@@ -52,6 +73,10 @@ const App = () => {
                 <Drawer.Screen
                   name="Pay monthly fee"
                   component={PayMonthlyFee}
+                />
+                <Drawer.Screen
+                  name="Transaction"
+                  component={TransactionStack}
                 />
               </>
             ) : (

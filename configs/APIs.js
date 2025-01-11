@@ -9,6 +9,9 @@ export const endpoints = {
   "active-user": "/users/active-user/",
   "monthly-fees": "/monthly-fees/",
   transaction: "/transactions/",
+  "transaction-detail": (transactionId) =>
+    `/transactions/${transactionId}/detail/`,
+  fees: "/fees/",
 };
 
 export const authApis = (token) => {

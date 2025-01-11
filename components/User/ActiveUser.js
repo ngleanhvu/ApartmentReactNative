@@ -53,11 +53,10 @@ const ActiveUser = ({ navigation }) => {
 
         if (res.status === 200) {
           alert("Thành công! Vui lòng đăng nhập.");
-          navigation.navigate("Login");
         } else if (res.status === 202) {
           alert("Tài khoản đã kích hoạt trước đó");
-          navigation.navigate("Login");
         }
+        navigation.navigate("Login");
       } catch (error) {
         console.log(error);
       } finally {
