@@ -6,13 +6,14 @@ import {
   ActivityIndicator,
 } from "react-native";
 import styles from "../../styles/styles";
-import { Chip, Searchbar } from "react-native-paper";
+import { Chip, Searchbar, Button } from "react-native-paper";
 import { useState, useEffect } from "react";
 import APIs, { endpoints, authApis } from "../../configs/APIs";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import moment from "moment";
 import Styles from "./Styles";
 import { RefreshControl } from "react-native";
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
 
 const MonthlyFee = ({ navigation }) => {
   const [fees, setFees] = useState([]);
@@ -21,14 +22,14 @@ const MonthlyFee = ({ navigation }) => {
   const [feeId, setFeeId] = useState("");
   const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
+  const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(null);
 
-  // Load fees
   const loadFees = async () => {
     const res = await APIs.get(endpoints["fees"]);
     setFees(res.data);
   };
 
-  // Load transactions
   const loadTransaction = async () => {
     if (page > 0) {
       setLoading(true);
@@ -37,6 +38,10 @@ const MonthlyFee = ({ navigation }) => {
         const api = authApis(token);
         let url = `${endpoints["transaction"]}?page=${page}`;
         if (feeId || q) url = `${url}&feeId=${feeId}&q=${q}`;
+        if (selectedDate) {
+          const formattedDate = moment(selectedDate).format("YYYY-MM");
+          url = `${url}&month=${formattedDate}`;
+        }
         const res = await api.get(url);
 
         if (page > 1)
@@ -51,38 +56,50 @@ const MonthlyFee = ({ navigation }) => {
     }
   };
 
-  // Load transactions on change of filters
+  const showDatePicker = () => {
+    setDatePickerVisibility(true);
+  };
+
+  const hideDatePicker = () => {
+    setDatePickerVisibility(false);
+  };
+
+  const handleConfirm = (date) => {
+    setSelectedDate(date);
+    hideDatePicker();
+    setPage(1);
+  };
+
+  const clearDateFilter = () => {
+    setSelectedDate(null);
+    setPage(1);
+  };
+
   useEffect(() => {
     let timer = setTimeout(() => loadTransaction(), 500);
-
     return () => clearTimeout(timer);
-  }, [feeId, q, page]);
+  }, [feeId, q, selectedDate, page]);
 
-  // Load fees when the component mounts
   useEffect(() => {
     loadFees();
   }, []);
 
-  // Load more data when the user reaches the end of the list
   const loadMore = () => {
     if (!loading && page > 0) {
       setPage(page + 1);
     }
   };
 
-  // Handle search
   const search = (value, callback) => {
     setPage(1);
     callback(value);
   };
 
-  // Refresh the data
   const refresh = () => {
     setPage(1);
     loadTransaction();
   };
-
-  // Render each transaction item
+  
   const renderTransactionItem = ({ item }) => (
     <View key={item.id} style={Styles.transactionItem}>
       <TouchableOpacity
@@ -117,12 +134,42 @@ const MonthlyFee = ({ navigation }) => {
           </TouchableOpacity>
         ))}
       </View>
+      
+      <View style={[styles.row, styles.margin]}>
+        <Button 
+          mode="outlined" 
+          onPress={showDatePicker}
+          style={{ flex: 1, marginRight: 5 }}
+        >
+          {selectedDate 
+            ? moment(selectedDate).format("MM/YYYY") 
+            : "Chọn tháng năm"}
+        </Button>
+        {selectedDate && (
+          <Button 
+            mode="outlined" 
+            onPress={clearDateFilter}
+            style={{ marginLeft: 5 }}
+          >
+            Xóa
+          </Button>
+        )}
+      </View>
+
       <Searchbar
         placeholder="Tìm hóa đơn"
         style={styles.margin}
         onChangeText={(text) => search(text, setQ)}
         value={q}
       />
+
+      <DateTimePickerModal
+        isVisible={isDatePickerVisible}
+        mode="date"
+        onConfirm={handleConfirm}
+        onCancel={hideDatePicker}
+      />
+
       {loading && <ActivityIndicator size="large" color="#0000ff" />}
       <FlatList
         style={Styles.margin}

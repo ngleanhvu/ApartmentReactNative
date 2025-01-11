@@ -12,6 +12,8 @@ export const endpoints = {
   "transaction-detail": (transactionId) =>
     `/transactions/${transactionId}/detail/`,
   fees: "/fees/",
+  register: "/vehicle-cards/register/",
+  "vehicle-cards": "/vehicle-cards/users/"
 };
 
 export const authApis = (token) => {

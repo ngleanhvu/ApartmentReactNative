@@ -149,7 +149,7 @@ const PayMonthlyFee = ({ navigation }) => {
   };
 
   useEffect(() => {
-    loadPendingMonthlyFees();
+    loadPendingMonthlyFees()
   }, []);
 
   const renderItem = ({ item }) => (
@@ -179,11 +179,15 @@ const PayMonthlyFee = ({ navigation }) => {
 
   const toggleSelection = (id) => {
     setSelectedItems((current) => {
-      return [...current, id];
+      if (current.includes(id)) {
+        return current.filter((item) => item !== id);
+      } else {
+        return [...current, id];
+      }
     });
   };
 
-  const onRefresh = async () => {
+  const refresh = async () => {
     loadPendingMonthlyFees();
     setSelectedItems([]);
   };
@@ -200,7 +204,7 @@ const PayMonthlyFee = ({ navigation }) => {
           keyExtractor={(item) => item.id.toString()}
           ListEmptyComponent={<Text>Danh sách trống</Text>}
           refreshControl={
-            <RefreshControl refreshing={loading} onRefresh={onRefresh} />
+            <RefreshControl refreshing={loading} onRefresh={refresh} />
           }
         />
       )}

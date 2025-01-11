@@ -8,6 +8,7 @@ import APIs, { authApis, endpoints } from "../../configs/APIs";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { KeyboardAvoidingView } from "react-native";
 import _ from "lodash";
+import debounce from "../../utils/debounce";
 
 const Login = ({ navigation }) => {
   const [username, setUserName] = useState("");
@@ -15,17 +16,15 @@ const Login = ({ navigation }) => {
   const [user, dispatch] = useContext(Contexts);
   const [loading, setLoading] = useState(false);
 
-  // Sử dụng debounce với useCallback để tránh tạo hàm lại mỗi lần render
-  const login = useCallback(
-    _.debounce(async () => {
+  const login = async () => {
       try {
         setLoading(true);
         let res = await APIs.post(endpoints["login"], {
           username: username,
           password: password,
-          client_id: "xyPzjeGdlywv4wu38E4zYT8vgZnDOaJdowBGRUcf",
+          client_id: "g4FgQ6ZUiAq3ySuMGtFbbhO9QIdD7tKcOaegqjtC",
           client_secret:
-            "z6yLI4sXIeUDp8QSs3ITQmFlUQbzUikD199U6UOxVphFJmU89U4yAu0BJfgnciagxq7iE3escWtYEUugRbJg1fbRvXitk7RLdQ231GEmcc6UPw1NLzLwzXxhNy6crWFh",
+            "hbHF3WwodjB91m08zqkng0GzmT9frcGIZRjR87BsN47o49vOT05OsZnuaeA8hHz6wpkEPBUUdmuzMemboiFTpgqtchgzfzAQbi1U1IGDMOistUWDDwxz871U4bjUfOmk",
           grant_type: "password",
         });
 
@@ -47,25 +46,16 @@ const Login = ({ navigation }) => {
             });
             navigation.navigate("Home");
           }
-        }, 1000);
+        });
       } catch (e) {
         console.error(e);
         alert("Đăng nhập thất bại!");
       } finally {
         setLoading(false);
       }
-    }, 1000), // Thời gian debounce: 1000ms
-    [username, password, dispatch, navigation]
-  );
+  } 
 
-  // Hàm xử lý sự kiện khi người dùng nhấn nút đăng nhập
-  const handleLoginPress = () => {
-    if (username.trim() === "" || password.trim() === "") {
-      alert("Vui lòng nhập tên đăng nhập và mật khẩu!");
-      return;
-    }
-    login(); // Gọi hàm debounce
-  };
+  const handleLogin = debounce(login, 1000)
 
   return (
     <KeyboardAvoidingView style={styles.container}>
@@ -77,17 +67,17 @@ const Login = ({ navigation }) => {
           <TextInput
             value={username}
             onChangeText={(u) => setUserName(u)}
-            placeholder="Tên đăng nhập"
-            style={Styles.input}
+            label="Tên đăng nhập"
+            style={styles.margin}
           />
           <TextInput
             value={password}
             onChangeText={(p) => setPassword(p)}
-            placeholder="Mật khẩu"
-            style={Styles.input}
+            label="Mật khẩu"
+            style={styles.margin}
             secureTextEntry={true}
           />
-          <TouchableOpacity style={Styles.button} onPress={handleLoginPress}>
+          <TouchableOpacity style={Styles.button} onPress={handleLogin}>
             <Text style={Styles.text}>Đăng nhập</Text>
           </TouchableOpacity>
         </>

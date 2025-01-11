@@ -29,7 +29,7 @@ const MonthlyFeeDetail = ({ route }) => {
 
   useEffect(() => {
     loadMonthlyFeeDetail();
-  }, []);
+  }, [transactionId]);
 
   return (
     <ScrollView style={Styles.margin}>
