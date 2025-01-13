@@ -149,7 +149,8 @@ const PayMonthlyFee = ({ navigation }) => {
   };
 
   useEffect(() => {
-    loadPendingMonthlyFees()
+    let timer = setTimeout(() => loadPendingMonthlyFees(), 500);
+    return () => clearTimeout(timer);
   }, []);
 
   const renderItem = ({ item }) => (

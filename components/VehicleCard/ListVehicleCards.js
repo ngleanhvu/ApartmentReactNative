@@ -17,7 +17,7 @@ const ListVehicleCards = () => {
   const [listVehicleCards, setListVehicleCards] = useState([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [q, setQ] = useState('')
+  const [q, setQ] = useState("");
 
   const loadVehicleCards = async () => {
     if (loading) return;
@@ -26,8 +26,8 @@ const ListVehicleCards = () => {
     try {
       const token = await AsyncStorage.getItem("access_token");
       const api = authApis(token);
-      let url = `${endpoints['vehicle-cards']}?page=${page}`
-      if (q)  url = `${url}&q=${q}`
+      let url = `${endpoints["vehicle-cards"]}?page=${page}`;
+      if (q) url = `${url}&q=${q}`;
       const res = await api.get(url);
 
       if (page > 1)
@@ -53,7 +53,8 @@ const ListVehicleCards = () => {
   );
 
   useEffect(() => {
-    loadVehicleCards();
+    let timer = setTimeout(() => loadVehicleCards(), 500);
+    return () => clearTimeout(timer);
   }, [q]);
 
   const loadMore = () => {
@@ -81,13 +82,14 @@ const ListVehicleCards = () => {
         onChangeText={(text) => search(text, setQ)}
         value={q}
       />
+      {loading && <ActivityIndicator size="large" color="#0000ff" />}
       <FlatList
         style={Styles.margin}
         data={listVehicleCards}
         renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
         refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={refresh} /> // Kéo để làm mới
+          <RefreshControl refreshing={loading} onRefresh={refresh} />
         }
         onEndReached={loadMore}
       />

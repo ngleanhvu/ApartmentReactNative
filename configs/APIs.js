@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 
-const HOST = "http://10.0.2.2:8000/";
+const HOST = "http://localhost:8000/";
 
 export const endpoints = {
   login: "/o/token/",
@@ -13,7 +13,7 @@ export const endpoints = {
     `/transactions/${transactionId}/detail/`,
   fees: "/fees/",
   register: "/vehicle-cards/register/",
-  "vehicle-cards": "/vehicle-cards/users/"
+  "vehicle-cards": "/vehicle-cards/users/",
 };
 
 export const authApis = (token) => {

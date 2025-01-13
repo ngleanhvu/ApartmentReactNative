@@ -17,45 +17,45 @@ const Login = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
 
   const login = async () => {
-      try {
-        setLoading(true);
-        let res = await APIs.post(endpoints["login"], {
-          username: username,
-          password: password,
-          client_id: "g4FgQ6ZUiAq3ySuMGtFbbhO9QIdD7tKcOaegqjtC",
-          client_secret:
-            "hbHF3WwodjB91m08zqkng0GzmT9frcGIZRjR87BsN47o49vOT05OsZnuaeA8hHz6wpkEPBUUdmuzMemboiFTpgqtchgzfzAQbi1U1IGDMOistUWDDwxz871U4bjUfOmk",
-          grant_type: "password",
-        });
+    try {
+      setLoading(true);
+      let res = await APIs.post(endpoints["login"], {
+        username: username,
+        password: password,
+        client_id: "xyPzjeGdlywv4wu38E4zYT8vgZnDOaJdowBGRUcf",
+        client_secret:
+          "z6yLI4sXIeUDp8QSs3ITQmFlUQbzUikD199U6UOxVphFJmU89U4yAu0BJfgnciagxq7iE3escWtYEUugRbJg1fbRvXitk7RLdQ231GEmcc6UPw1NLzLwzXxhNy6crWFh",
+        grant_type: "password",
+      });
 
-        console.log(res.data);
+      console.log(res.data);
 
-        setTimeout(async () => {
-          const user = await authApis(res.data.access_token).get(
-            endpoints["current-user"]
-          );
-          console.log(user.data.changed_password);
-          if (user.data.changed_password === false) {
-            alert("Vui lòng kích hoạt tài khoản!");
-            navigation.navigate("Active user");
-          } else {
-            await AsyncStorage.setItem("access_token", res.data.access_token);
-            dispatch({
-              type: "login",
-              payload: user.data,
-            });
-            navigation.navigate("Home");
-          }
-        });
-      } catch (e) {
-        console.error(e);
-        alert("Đăng nhập thất bại!");
-      } finally {
-        setLoading(false);
-      }
-  } 
+      setTimeout(async () => {
+        const user = await authApis(res.data.access_token).get(
+          endpoints["current-user"]
+        );
+        console.log(user.data.changed_password);
+        if (user.data.changed_password === false) {
+          alert("Vui lòng kích hoạt tài khoản!");
+          navigation.navigate("Active user");
+        } else {
+          await AsyncStorage.setItem("access_token", res.data.access_token);
+          dispatch({
+            type: "login",
+            payload: user.data,
+          });
+          navigation.navigate("Home");
+        }
+      });
+    } catch (e) {
+      console.error(e);
+      alert("Đăng nhập thất bại!");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const handleLogin = debounce(login, 1000)
+  const handleLogin = debounce(login, 1000);
 
   return (
     <KeyboardAvoidingView style={styles.container}>

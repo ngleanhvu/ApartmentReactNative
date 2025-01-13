@@ -28,7 +28,8 @@ const MonthlyFeeDetail = ({ route }) => {
   };
 
   useEffect(() => {
-    loadMonthlyFeeDetail();
+    let timer = setTimeout(() => loadMonthlyFeeDetail(), 500);
+    return () => clearTimeout(timer);
   }, [transactionId]);
 
   return (

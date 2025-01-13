@@ -19,6 +19,7 @@ import MonthlyFeeDetail from "./components/MonthlyFee/MonthlyFeeDetail";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import RegisterVehicleCard from "./components/VehicleCard/RegisterVehicleCard";
 import ListVehicleCards from "./components/VehicleCard/ListVehicleCards";
+import Chat from "./components/Chat/Chat";
 
 const Stack = createNativeStackNavigator();
 
@@ -41,8 +42,16 @@ const VehicleNativeStack = createNativeStackNavigator();
 
 const VehicleStack = () => (
   <VehicleNativeStack.Navigator>
-    <VehicleNativeStack.Screen name="Register vehicle card" component={RegisterVehicleCard} options={{headerShown: false}} />
-    <VehicleNativeStack.Screen name="List vehicle cards" component={ListVehicleCards} options={{headerShown: false}} />
+    <VehicleNativeStack.Screen
+      name="Register vehicle card"
+      component={RegisterVehicleCard}
+      options={{ headerShown: false }}
+    />
+    <VehicleNativeStack.Screen
+      name="List vehicle cards"
+      component={ListVehicleCards}
+      options={{ headerShown: false }}
+    />
   </VehicleNativeStack.Navigator>
 );
 
@@ -89,10 +98,8 @@ const App = () => {
                   name="Transaction"
                   component={TransactionStack}
                 />
-                <Drawer.Screen
-                  name="Vehicle card"
-                  component={VehicleStack}
-                />
+                <Drawer.Screen name="Vehicle card" component={VehicleStack} />
+                <Drawer.Screen name="Chat" component={Chat}></Drawer.Screen>
               </>
             ) : (
               <>
