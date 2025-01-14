@@ -57,7 +57,7 @@ const PayMonthlyFee = ({ navigation }) => {
       const res = await api.post(url, {
         ids: JSON.stringify(selectedItems)
       });
-
+      
       if (res.data && res.data.clientSecret) {
         const { error } = await initPaymentSheet({
           paymentIntentClientSecret: res.data.clientSecret,

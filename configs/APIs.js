@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 
-const HOST = "http://10.0.2.2:8000/";
+const HOST = "http://192.168.1.5:8000/";
 
 export const endpoints = {
   login: "/o/token/",
@@ -9,6 +9,12 @@ export const endpoints = {
   "active-user": "/users/active-user/",
   "monthly-fees": "/monthly-fees/",
   transaction: "/transactions/",
+  feedbacks:"/feedbacks/",
+  storageLocker:"/storage_lockers/",
+  packages : "/packages/",
+  surveys : "/surveys/",
+  'survey-details': (surveyId) => `/surveys/${surveyId}/`,
+  'submit-survey' : (surveyId) => `/surveys/${surveyId}/submit_response/`
 };
 
 export const authApis = (token) => {
@@ -16,9 +22,7 @@ export const authApis = (token) => {
   return axios.create({
     baseURL: HOST,
     headers: {
-      Authorization: `Bearer ${
-        token === null ? AsyncStorage.getItem("access_token") : token
-      }`,
+      Authorization: `Bearer ${token}`,
     },
   });
 };

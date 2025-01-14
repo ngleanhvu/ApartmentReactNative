@@ -13,12 +13,16 @@ import ActiveUser from "./components/User/ActiveUser";
 import PayMonthlyFee from "./components/MonthlyFee/PayMonthlyFee";
 import Login from "./components/User/Login";
 import { StripeProvider } from "@stripe/stripe-react-native";
+import FeedbackList from "./components/Feedback/Feedback";
+import StorageLocker from "./components/StorageLocker/StorageLocker";
+import Survey from "./components/Survey/Surveys";
+
+
 
 const Drawer = createDrawerNavigator();
 
 const CustomDrawerContent = (props) => {
   const [user, dispatch] = React.useContext(Contexts);
-
   return (
     <DrawerContentScrollView {...props}>
       <DrawerItemList {...props} />
@@ -33,6 +37,7 @@ const CustomDrawerContent = (props) => {
     </DrawerContentScrollView>
   );
 };
+
 
 const App = () => {
   const [user, dispatch] = useReducer(MyUserReducer, null);
@@ -53,6 +58,9 @@ const App = () => {
                   name="Pay monthly fee"
                   component={PayMonthlyFee}
                 />
+                <Drawer.Screen name="Feedback" component={FeedbackList} />
+                <Drawer.Screen name="Storage Locker" component={StorageLocker} />
+                <Drawer.Screen name="Survey" component={Survey}/>
               </>
             ) : (
               <>

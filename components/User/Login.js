@@ -23,9 +23,9 @@ const Login = ({ navigation }) => {
         let res = await APIs.post(endpoints["login"], {
           username: username,
           password: password,
-          client_id: "xyPzjeGdlywv4wu38E4zYT8vgZnDOaJdowBGRUcf",
+          client_id: "NEhfaQMcWPDLx3slUAhGdz26pCrOjn8RxpaIWjFJ",
           client_secret:
-            "z6yLI4sXIeUDp8QSs3ITQmFlUQbzUikD199U6UOxVphFJmU89U4yAu0BJfgnciagxq7iE3escWtYEUugRbJg1fbRvXitk7RLdQ231GEmcc6UPw1NLzLwzXxhNy6crWFh",
+            "hPnARz0l2izaV31EZGjOsIcKt9cOq0oe4hd5gwSiCMLexc99ewrqgXbeOqKi3Tsib5WUB9lY8130CryDJu56bkZNu5eZysmT85teiEJz4pNgWoYCOiFaIqBZHMf8loJt",
           grant_type: "password",
         });
 
