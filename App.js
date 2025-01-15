@@ -20,6 +20,10 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import RegisterVehicleCard from "./components/VehicleCard/RegisterVehicleCard";
 import ListVehicleCards from "./components/VehicleCard/ListVehicleCards";
 import Chat from "./components/Chat/Chat";
+import Profile from "./components/User/Profile";
+import * as Notifications from "expo-notifications";
+import { useEffect } from "react";
+import NotificationDetail from "./components/Home/NotificationDetail";
 
 const Stack = createNativeStackNavigator();
 
@@ -55,6 +59,22 @@ const VehicleStack = () => (
   </VehicleNativeStack.Navigator>
 );
 
+const HomeDrawer = createDrawerNavigator();
+
+const HomeStack = () => (
+  <HomeDrawer.Navigator>
+    <HomeDrawer.Screen
+      name="Home"
+      component={Home}
+      options={{ headerShown: false }}
+    />
+    <HomeDrawer.Screen
+      name="Notification Detail"
+      component={NotificationDetail}
+      options={{ headerShown: false }}
+    />
+  </HomeDrawer.Navigator>
+);
 const Drawer = createDrawerNavigator();
 
 const CustomDrawerContent = (props) => {
@@ -86,10 +106,10 @@ const App = () => {
             initialRouteName="Home"
             drawerContent={(props) => <CustomDrawerContent {...props} />}
           >
-            <Drawer.Screen name="Home" component={Home} />
+            <Drawer.Screen name="Home" component={HomeStack} />
             {user ? (
               <>
-                <Drawer.Screen name={user.username} component={Home} />
+                <Drawer.Screen name={"Profile"} component={Profile} />
                 <Drawer.Screen
                   name="Pay monthly fee"
                   component={PayMonthlyFee}

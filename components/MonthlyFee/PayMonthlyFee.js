@@ -65,24 +65,24 @@ const PayMonthlyFee = ({ navigation }) => {
         });
 
         if (error) {
-          console.error("Error initializing payment sheet:", error);
-          Alert.alert("Lỗi", "Không thể khởi tạo phiên thanh toán.");
+          console.log("Error initializing payment sheet:", error);
+          alert("Thanh toán thất bại");
           return;
         }
 
         const { error: paymentError } = await presentPaymentSheet();
 
         if (paymentError) {
-          console.error("Payment failed:", paymentError.message);
-          Alert.alert("Lỗi", "Thanh toán thất bại.");
+          console.log("Payment failed:", paymentError.message);
+          alert("Thanh toán thất bại.");
         } else {
-          Alert.alert("Thành công", "Thanh toán thành công!");
+          alert("Thanh toán thành công!");
           loadPendingMonthlyFees();
         }
       }
     } catch (error) {
-      console.error("Error creating payment session:", error);
-      Alert.alert("Lỗi", "Không thể tạo phiên thanh toán.");
+      console.log("Error creating payment session:", error);
+      alert("Thanh toán thất bại");
     } finally {
       setLoading(false);
     }
@@ -126,14 +126,14 @@ const PayMonthlyFee = ({ navigation }) => {
       });
 
       if (result.status === 200) {
-        Alert.alert("Thành công", "Gửi thanh toán thành công.");
+        alert("Thanh toán thành công.");
         loadPendingMonthlyFees();
       } else {
-        Alert.alert("Thất bại", "Gửi thanh toán thất bại.");
+        alert("Thanh toán thất bại.");
       }
     } catch (error) {
-      console.error("Error creating Momo payment:", error);
-      Alert.alert("Lỗi", "Có lỗi xảy ra khi gửi thanh toán.");
+      console.log("Error creating Momo payment:", error);
+      alert("Thanh toán thất bại.");
     } finally {
       setLoading(false);
       setThumbnail(null);

@@ -13,7 +13,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import moment from "moment";
 import Styles from "./Styles";
 import { RefreshControl } from "react-native";
-import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 
 const MonthlyFee = ({ navigation }) => {
   const [fees, setFees] = useState([]);
@@ -99,7 +99,7 @@ const MonthlyFee = ({ navigation }) => {
     setPage(1);
     loadTransaction();
   };
-  
+
   const renderTransactionItem = ({ item }) => (
     <View key={item.id} style={Styles.transactionItem}>
       <TouchableOpacity
@@ -134,20 +134,20 @@ const MonthlyFee = ({ navigation }) => {
           </TouchableOpacity>
         ))}
       </View>
-      
+
       <View style={[styles.row, styles.margin]}>
-        <Button 
-          mode="outlined" 
+        <Button
+          mode="outlined"
           onPress={showDatePicker}
           style={{ flex: 1, marginRight: 5 }}
         >
-          {selectedDate 
-            ? moment(selectedDate).format("MM/YYYY") 
+          {selectedDate
+            ? moment(selectedDate).format("MM/YYYY")
             : "Chọn tháng năm"}
         </Button>
         {selectedDate && (
-          <Button 
-            mode="outlined" 
+          <Button
+            mode="outlined"
             onPress={clearDateFilter}
             style={{ marginLeft: 5 }}
           >

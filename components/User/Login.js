@@ -22,9 +22,9 @@ const Login = ({ navigation }) => {
       let res = await APIs.post(endpoints["login"], {
         username: username,
         password: password,
-        client_id: "xyPzjeGdlywv4wu38E4zYT8vgZnDOaJdowBGRUcf",
+        client_id: "uVatyXc61WfRWNPKQSxSZQXIrQvjs6NZnAdFO1Bo",
         client_secret:
-          "z6yLI4sXIeUDp8QSs3ITQmFlUQbzUikD199U6UOxVphFJmU89U4yAu0BJfgnciagxq7iE3escWtYEUugRbJg1fbRvXitk7RLdQ231GEmcc6UPw1NLzLwzXxhNy6crWFh",
+          "K5bHZvyHrT9wfwaldREY5knY66G5Z0ZSZIrbX94DASh0l5wcp8GE8o6Ni62sUAGLTM0YekOLb4n2Ii9k5INxR8XoiC3MQ1Jf6emkTsb7zoxyDpecDwtgswXWkz40Z16B",
         grant_type: "password",
       });
 
@@ -48,7 +48,7 @@ const Login = ({ navigation }) => {
         }
       });
     } catch (e) {
-      console.error(e);
+      console.log(e);
       alert("Đăng nhập thất bại!");
     } finally {
       setLoading(false);

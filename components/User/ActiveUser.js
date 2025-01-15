@@ -30,47 +30,50 @@ const ActiveUser = ({ navigation }) => {
   };
 
   const activeUser = async () => {
-      setLoading(true);
-      try {
-        console.log(user.avatar)
-        let form = new FormData();
-        for (let key in user) {
-          if (key === "avatar") {
-            form.append("avatar", {
-              uri: user.avatar.uri,
-              name: user.avatar.fileName,
-              type: user.avatar.type,
-            });
-          } else {
-            form.append(key, user[key]);
-          }
+    setLoading(true);
+    try {
+      console.log(user.avatar);
+      let form = new FormData();
+      for (let key in user) {
+        if (key === "avatar") {
+          form.append("avatar", {
+            uri: user.avatar.uri,
+            name: user.avatar.fileName,
+            type: user.avatar.type,
+          });
+        } else {
+          form.append(key, user[key]);
         }
-        console.log(user['avatar'])
-        console.log(form)
-        const res = await APIs.post(endpoints["active-user"], form, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        });
-
-        if (res.status === 200) {
-          alert("Thành công! Vui lòng đăng nhập.");
-        } else if (res.status === 202) {
-          alert("Tài khoản đã kích hoạt trước đó");
-        }
-        navigation.navigate("Login");
-      } catch (error) {
-        console.log(error);
-      } finally {
-        setLoading(false);
-        setUser({
-          phone: "",
-          password: "",
-          retype_password: "",
-          avatar: "",
-        });
       }
-  }
+      console.log(user["avatar"]);
+      console.log(form);
+      const res = await APIs.post(endpoints["active-user"], form, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      if (res.status === 200) {
+        alert("Thành công! Vui lòng đăng nhập.");
+      } else if (res.status === 202) {
+        alert("Tài khoản đã kích hoạt trước đó");
+      } else {
+        alert("Kích hoạt người dùng thất bại!");
+      }
+      navigation.navigate("Login");
+    } catch (error) {
+      console.log(error);
+      alert("Kích hoạt người dùng thất bại!");
+    } finally {
+      setLoading(false);
+      setUser({
+        phone: "",
+        password: "",
+        retype_password: "",
+        avatar: "",
+      });
+    }
+  };
 
   const pickImage = async () => {
     let { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -78,14 +81,14 @@ const ActiveUser = ({ navigation }) => {
       alert("Permissions denied!");
     } else {
       const result = await ImagePicker.launchImageLibraryAsync();
-      console.log(result)
+      console.log(result);
       if (!result.canceled) {
         change("avatar", result.assets[0]);
       }
     }
   };
 
-  const handleActiveUser = debounce(activeUser, 1000)
+  const handleActiveUser = debounce(activeUser, 1000);
 
   return (
     <View style={styles.container}>

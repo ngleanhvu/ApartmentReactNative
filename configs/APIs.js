@@ -14,6 +14,9 @@ export const endpoints = {
   fees: "/fees/",
   register: "/vehicle-cards/register/",
   "vehicle-cards": "/vehicle-cards/users/",
+  "current-user": "/users/current-user/",
+  notification: "/notifications/",
+  "notification-detail": (id) => `/notifications/${id}/`,
 };
 
 export const authApis = (token) => {
