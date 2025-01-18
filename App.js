@@ -24,6 +24,9 @@ import Profile from "./components/User/Profile";
 import * as Notifications from "expo-notifications";
 import { useEffect } from "react";
 import NotificationDetail from "./components/Home/NotificationDetail";
+import FeedbackList from "./components/Feedback/FeedBack";
+import StorageLocker from "./components/StorageLocker/StorageLocker";
+import Survey from "./components/Survey/Survey";
 
 const Stack = createNativeStackNavigator();
 
@@ -120,6 +123,12 @@ const App = () => {
                 />
                 <Drawer.Screen name="Vehicle card" component={VehicleStack} />
                 <Drawer.Screen name="Chat" component={Chat}></Drawer.Screen>
+                <Drawer.Screen name="Feedback" component={FeedbackList} />
+                <Drawer.Screen
+                  name="Storage Locker"
+                  component={StorageLocker}
+                />
+                <Drawer.Screen name="Survey" component={Survey} />
               </>
             ) : (
               <>

@@ -22,9 +22,9 @@ const Login = ({ navigation }) => {
       let res = await APIs.post(endpoints["login"], {
         username: username,
         password: password,
-        client_id: "uVatyXc61WfRWNPKQSxSZQXIrQvjs6NZnAdFO1Bo",
+        client_id: "3xKC0lvyq2A5MwbyHBmwNwHPhy8NP2mzWU0ORkcD",
         client_secret:
-          "K5bHZvyHrT9wfwaldREY5knY66G5Z0ZSZIrbX94DASh0l5wcp8GE8o6Ni62sUAGLTM0YekOLb4n2Ii9k5INxR8XoiC3MQ1Jf6emkTsb7zoxyDpecDwtgswXWkz40Z16B",
+          "VBqr4UUne4r2sFHeb5iUajUyMeLHwfVgi7F3F3Qrnv5hP2aDpLXGPw4eFQhWyixrbFMiFq5lYYtfh6cTKQ3tCZyojMuXHJVebIpZ813XvmOQCFWBjKDEgFgbAzg5VLoA",
         grant_type: "password",
       });
 

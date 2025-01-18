@@ -17,6 +17,12 @@ export const endpoints = {
   "current-user": "/users/current-user/",
   notification: "/notifications/",
   "notification-detail": (id) => `/notifications/${id}/`,
+  feedbacks: "/feedbacks/",
+  storageLocker: "/storage_lockers/",
+  packages: "/packages/",
+  surveys: "/surveys/",
+  "survey-details": (surveyId) => `/surveys/${surveyId}/`,
+  "submit-survey": (surveyId) => `/surveys/${surveyId}/submit_response/`,
 };
 
 export const authApis = (token) => {
