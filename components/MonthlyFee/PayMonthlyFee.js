@@ -18,7 +18,7 @@ import { useStripe } from "@stripe/stripe-react-native";
 import Modal from "react-native-modal";
 import * as ImagePicker from "expo-image-picker";
 import _ from "lodash";
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from "@expo/vector-icons";
 
 const PayMonthlyFee = ({ navigation }) => {
   const [monthlyFees, setMonthlyFees] = useState([]);
@@ -27,7 +27,7 @@ const PayMonthlyFee = ({ navigation }) => {
   const [isModalVisible, setModalVisible] = useState(false);
   const [thumbnail, setThumbnail] = useState(null);
   const [totalAmount, setTotalAmount] = useState(0);
-  const [refreshing, setRefreshing] = useState(false);
+
   const [selectedItems, setSelectedItems] = useState([]);
 
   const loadPendingMonthlyFees = async () => {
@@ -55,34 +55,34 @@ const PayMonthlyFee = ({ navigation }) => {
       const api = authApis(token);
       const url = `${endpoints["transaction"]}stripe/`;
       const res = await api.post(url, {
-        ids: JSON.stringify(selectedItems)
+        ids: JSON.stringify(selectedItems),
       });
-      
+
       if (res.data && res.data.clientSecret) {
         const { error } = await initPaymentSheet({
           paymentIntentClientSecret: res.data.clientSecret,
-          merchantDisplayName: 'Stripe',
+          merchantDisplayName: "Stripe",
         });
 
         if (error) {
-          console.error("Error initializing payment sheet:", error);
-          Alert.alert("Lỗi", "Không thể khởi tạo phiên thanh toán.");
+          console.log("Error initializing payment sheet:", error);
+          alert("Thanh toán thất bại");
           return;
         }
 
         const { error: paymentError } = await presentPaymentSheet();
 
         if (paymentError) {
-          console.error("Payment failed:", paymentError.message);
-          Alert.alert("Lỗi", "Thanh toán thất bại.");
+          console.log("Payment failed:", paymentError.message);
+          alert("Thanh toán thất bại.");
         } else {
-          Alert.alert("Thành công", "Thanh toán thành công!");
+          alert("Thanh toán thành công!");
           loadPendingMonthlyFees();
         }
       }
     } catch (error) {
-      console.error("Error creating payment session:", error);
-      Alert.alert("Lỗi", "Không thể tạo phiên thanh toán.");
+      console.log("Error creating payment session:", error);
+      alert("Thanh toán thất bại");
     } finally {
       setLoading(false);
     }
@@ -105,101 +105,96 @@ const PayMonthlyFee = ({ navigation }) => {
     }
   };
 
-  const createMomoPayment = useCallback(
-    _.debounce(async () => {
-      if (!thumbnail) {
-        Alert.alert("Lỗi", "Vui lòng chọn ảnh trước khi gửi.");
-        return;
+  const createMomoPayment = async () => {
+    setLoading(true);
+    try {
+      const form = new FormData();
+      form.append("thumbnail", {
+        uri: thumbnail.uri,
+        name: thumbnail.fileName || "image.jpg",
+        type: "image/jpeg",
+      });
+
+      form.append("ids", JSON.stringify(selectedItems));
+
+      const token = await AsyncStorage.getItem("access_token");
+      const result = await APIs.post(`${endpoints["transaction"]}momo/`, form, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (result.status === 200) {
+        alert("Thanh toán thành công.");
+        loadPendingMonthlyFees();
+      } else {
+        alert("Thanh toán thất bại.");
       }
-
-      setLoading(true);
-      try {
-        const form = new FormData();
-        form.append("thumbnail", {
-          uri: thumbnail.uri,
-          name: thumbnail.fileName || "image.jpg",
-          type: "image/jpeg",
-        });
-
-        form.append("ids", JSON.stringify(selectedItems))
-
-        const token = await AsyncStorage.getItem("access_token");
-        const result = await APIs.post(
-          `${endpoints["transaction"]}momo/`,
-          form,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (result.status === 200) {
-          Alert.alert("Thành công", "Gửi thanh toán thành công.");
-          loadPendingMonthlyFees();
-        } else {
-          Alert.alert("Thất bại", "Gửi thanh toán thất bại.");
-        }
-      } catch (error) {
-        console.error("Error creating Momo payment:", error);
-        Alert.alert("Lỗi", "Có lỗi xảy ra khi gửi thanh toán.");
-      } finally {
-        setLoading(false);
-        setThumbnail(null);
-      }
-    }, 1000),
-  );
+    } catch (error) {
+      console.log("Error creating Momo payment:", error);
+      alert("Thanh toán thất bại.");
+    } finally {
+      setLoading(false);
+      setThumbnail(null);
+    }
+  };
 
   const toggleModal = () => {
-    const total = monthlyFees.filter(item => selectedItems.includes(item.id)).reduce((sum, item) => sum + item.amount, 0);
+    const total = monthlyFees
+      .filter((item) => selectedItems.includes(item.id))
+      .reduce((sum, item) => sum + item.amount, 0);
     setTotalAmount(total);
     setModalVisible(!isModalVisible);
   };
 
   useEffect(() => {
-    loadPendingMonthlyFees();
+    let timer = setTimeout(() => loadPendingMonthlyFees(), 500);
+    return () => clearTimeout(timer);
   }, []);
 
-
   const renderItem = ({ item }) => (
-    <View key={item.id} style={Styles.fee}>
-      <Text style={Styles.text}>{item.amount.toLocaleString("vi-VN")} VNĐ</Text>
-      <Text style={Styles.text}>{item.fee.name}</Text>
-      <Text style={Styles.text}>
-        Tháng: {new Date(item.created_date).getMonth() + 1}
-      </Text>
-      <TouchableOpacity onPress={() => toggleSelection(item.id)}>
-      <Ionicons
-        name={selectedItems.includes(item.id) ? "checkbox" : "checkbox-outline"}
-        size={24}
-        color="white"
-      />
-    </TouchableOpacity>
+    <View>
+      <View key={item.id} style={Styles.transactionItem}>
+        <Text style={Styles.transactionAmount}>
+          {item.amount.toLocaleString("vi-VN")} VNĐ
+        </Text>
+        <Text style={Styles.transactionDescription}>{item.fee.name}</Text>
+        <Text style={Styles.transactionDate}>
+          {new Date(item.created_date).getMonth() + 1}-
+          {new Date(item.created_date).getFullYear()}
+        </Text>
+
+        <TouchableOpacity onPress={() => toggleSelection(item.id)}>
+          <Ionicons
+            name={
+              selectedItems.includes(item.id) ? "checkbox" : "checkbox-outline"
+            }
+            size={24}
+            color="primary"
+          />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 
   const toggleSelection = (id) => {
-    setSelectedItems((prevSelectedItems) => {
-      if (prevSelectedItems.includes(id)) {
-        return prevSelectedItems.filter(itemId => itemId !== id);  // Bỏ chọn item
+    setSelectedItems((current) => {
+      if (current.includes(id)) {
+        return current.filter((item) => item !== id);
       } else {
-        return [...prevSelectedItems, id];  // Chọn item
+        return [...current, id];
       }
     });
   };
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await loadPendingMonthlyFees();
-    setSelectedItems([])
-    setRefreshing(false);
+  const refresh = async () => {
+    loadPendingMonthlyFees();
+    setSelectedItems([]);
   };
-
 
   return (
     <View style={styles.container}>
-      <Text style={styles.subject}>Đóng phí chung cư</Text>
       <Text style={Styles.title}>Các khoản phí chưa đóng</Text>
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />
@@ -208,9 +203,9 @@ const PayMonthlyFee = ({ navigation }) => {
           data={monthlyFees}
           renderItem={renderItem}
           keyExtractor={(item) => item.id.toString()}
-          ListEmptyComponent={<Text>Danh sách trống</Text>}  // Hiển thị khi danh sách trống
+          ListEmptyComponent={<Text>Danh sách trống</Text>}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl refreshing={loading} onRefresh={refresh} />
           }
         />
       )}
@@ -220,7 +215,7 @@ const PayMonthlyFee = ({ navigation }) => {
       >
         <Text style={[Styles.text, Styles.text_center]}>Stripe</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={Styles.button_momo} onPress={toggleModal}>
+      <TouchableOpacity style={[Styles.button_momo]} onPress={toggleModal}>
         <Text style={[Styles.text_center, Styles.text]}>Momo</Text>
       </TouchableOpacity>
 

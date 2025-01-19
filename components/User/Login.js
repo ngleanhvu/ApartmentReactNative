@@ -8,6 +8,7 @@ import APIs, { authApis, endpoints } from "../../configs/APIs";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { KeyboardAvoidingView } from "react-native";
 import _ from "lodash";
+import debounce from "../../utils/debounce";
 
 const Login = ({ navigation }) => {
   const [username, setUserName] = useState("");
@@ -15,57 +16,46 @@ const Login = ({ navigation }) => {
   const [user, dispatch] = useContext(Contexts);
   const [loading, setLoading] = useState(false);
 
-  // Sử dụng debounce với useCallback để tránh tạo hàm lại mỗi lần render
-  const login = useCallback(
-    _.debounce(async () => {
-      try {
-        setLoading(true);
-        let res = await APIs.post(endpoints["login"], {
-          username: username,
-          password: password,
-          client_id: "NEhfaQMcWPDLx3slUAhGdz26pCrOjn8RxpaIWjFJ",
-          client_secret:
-            "hPnARz0l2izaV31EZGjOsIcKt9cOq0oe4hd5gwSiCMLexc99ewrqgXbeOqKi3Tsib5WUB9lY8130CryDJu56bkZNu5eZysmT85teiEJz4pNgWoYCOiFaIqBZHMf8loJt",
-          grant_type: "password",
-        });
+  const login = async () => {
+    try {
+      setLoading(true);
+      let res = await APIs.post(endpoints["login"], {
+        username: username,
+        password: password,
+        client_id: "XGgTkUI8QNNyh9U3DuBZClwCS8eseXWJt9uITAE2",
+        client_secret:
+          "k7DImmg41Gp74h4XjfqgKE89rgQrIDWJx9EUgf1c1WNVw5kDjjXU9QKmupE0ZWoHtxyB4b3RYCUmuEcLoIuWrSsv4SwBVLqTZ8LPq8AdDZRw2mum3I7zmfzSoVI3DAZw",
+        grant_type: "password",
+      });
 
-        console.log(res.data);
+      console.log(res.data);
 
-        setTimeout(async () => {
-          const user = await authApis(res.data.access_token).get(
-            endpoints["current-user"]
-          );
-          console.log(user.data.changed_password);
-          if (user.data.changed_password === false) {
-            alert("Vui lòng kích hoạt tài khoản!");
-            navigation.navigate("Active user");
-          } else {
-            await AsyncStorage.setItem("access_token", res.data.access_token);
-            dispatch({
-              type: "login",
-              payload: user.data,
-            });
-            navigation.navigate("Home");
-          }
-        }, 1000);
-      } catch (e) {
-        console.error(e);
-        alert("Đăng nhập thất bại!");
-      } finally {
-        setLoading(false);
-      }
-    }, 1000), // Thời gian debounce: 1000ms
-    [username, password, dispatch, navigation]
-  );
-
-  // Hàm xử lý sự kiện khi người dùng nhấn nút đăng nhập
-  const handleLoginPress = () => {
-    if (username.trim() === "" || password.trim() === "") {
-      alert("Vui lòng nhập tên đăng nhập và mật khẩu!");
-      return;
+      setTimeout(async () => {
+        const user = await authApis(res.data.access_token).get(
+          endpoints["current-user"]
+        );
+        console.log(user.data.changed_password);
+        if (user.data.changed_password === false) {
+          alert("Vui lòng kích hoạt tài khoản!");
+          navigation.navigate("Active user");
+        } else {
+          await AsyncStorage.setItem("access_token", res.data.access_token);
+          dispatch({
+            type: "login",
+            payload: user.data,
+          });
+          navigation.navigate("Home");
+        }
+      });
+    } catch (e) {
+      console.log(e);
+      alert("Đăng nhập thất bại!");
+    } finally {
+      setLoading(false);
     }
-    login(); // Gọi hàm debounce
   };
+
+  const handleLogin = debounce(login, 1000);
 
   return (
     <KeyboardAvoidingView style={styles.container}>
@@ -77,17 +67,17 @@ const Login = ({ navigation }) => {
           <TextInput
             value={username}
             onChangeText={(u) => setUserName(u)}
-            placeholder="Tên đăng nhập"
-            style={Styles.input}
+            label="Tên đăng nhập"
+            style={styles.margin}
           />
           <TextInput
             value={password}
             onChangeText={(p) => setPassword(p)}
-            placeholder="Mật khẩu"
-            style={Styles.input}
+            label="Mật khẩu"
+            style={styles.margin}
             secureTextEntry={true}
           />
-          <TouchableOpacity style={Styles.button} onPress={handleLoginPress}>
+          <TouchableOpacity style={Styles.button} onPress={handleLogin}>
             <Text style={Styles.text}>Đăng nhập</Text>
           </TouchableOpacity>
         </>

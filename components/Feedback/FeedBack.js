@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet, Modal, ScrollView, RefreshControl, useWindowDimensions } from "react-native";
+import { View, StyleSheet, Modal, ScrollView } from "react-native";
 import {
   Avatar,
   Card,
@@ -12,14 +12,14 @@ import {
 import { authApis } from "../../configs/APIs";
 import { endpoints } from "../../configs/APIs";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import RenderHTML from "react-native-render-html";
+import RenderHTMLf, { RenderHTML } from "react-native-render-html";
 
 const FeedbackList = () => {
   const [feedbacks, setFeedbacks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [selectedFeedback, setSelectedFeedback] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [page, setPage] = useState(1);
   const [newFeedback, setNewFeedback] = useState({
     title: "",
     description: "",
@@ -27,11 +27,8 @@ const FeedbackList = () => {
   const [submitting, setSubmitting] = useState(false);
   const [createModalVisible, setCreateModalVisible] = useState(false);
 
-  const { width } = useWindowDimensions(); 
-  
   const loadFeedbacks = async () => {
     try {
-      setLoading(true);
       const token = await AsyncStorage.getItem("access_token");
       const api = await authApis(token);
       const response = await api.get(endpoints.feedbacks);
@@ -41,12 +38,6 @@ const FeedbackList = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const onRefresh = async () => {
-    setRefreshing(true); // Hiển thị hiệu ứng làm mới
-    await loadFeedbacks();
-    setRefreshing(false); // Tắt hiệu ứng làm mới
   };
 
   useEffect(() => {
@@ -66,8 +57,10 @@ const FeedbackList = () => {
       const api = await authApis(token);
       await api.post(endpoints.feedbacks, newFeedback);
 
+      // Reset form và đóng modal
       setNewFeedback({ title: "", description: "" });
       setCreateModalVisible(false);
+
       loadFeedbacks();
     } catch (error) {
       console.error("Error creating feedback:", error.message);
@@ -89,49 +82,48 @@ const FeedbackList = () => {
 
   return (
     <View style={styles.container}>
-        <ScrollView
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-            />
-          }
-        >
-          {feedbacks.map((feedback) => (
-            <Card
-              key={feedback.id}
-              style={styles.card}
-              onPress={() => handleCardPress(feedback)}
-            >
-              <Card.Title
-                title={feedback.title}
-                subtitle={
-                  <Text
-                    style={[
-                      styles.subtitle,
-                      {
-                        color: feedback.status === "Resolved" ? "green" : "red",
-                      },
-                    ]}
-                  >
-                    {feedback.status}
-                  </Text>
-                }
-                left={(props) => (
-                  <Avatar.Icon {...props} icon="alpha-f-box-outline" />
-                )}
-                right={(props) => (
-                  <IconButton {...props} icon="dots-vertical" />
-                )}
-              />
-              <Card.Content>
-                <RenderHTML source={{ html: feedback.description }}  contentWidth={width} />
-              </Card.Content>
-            </Card>
-          ))}
-        </ScrollView>
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" animating={loading} color="#0000ff" />
+        </View>
+      ) : (
+        <>
+          <ScrollView>
+            {feedbacks.map((feedback) => (
+              <Card
+                key={feedback.id}
+                style={styles.card}
+                onPress={() => handleCardPress(feedback)} // Mở modal khi nhấn vào card
+              >
+                <Card.Title
+                  title={feedback.title}
+                  subtitle={
+                    <Text
+                      style={[
+                        styles.subtitle,
+                        {
+                          color:
+                            feedback.status === "Resolved" ? "green" : "red",
+                        },
+                      ]}
+                    >
+                      {feedback.status}
+                    </Text>
+                  }
+                  left={(props) => (
+                    <Avatar.Icon {...props} icon="alpha-f-box-outline" />
+                  )}
+                  right={(props) => (
+                    <IconButton {...props} icon="dots-vertical" />
+                  )}
+                />
+                <Card.Content>
+                  <RenderHTML source={{ html: feedback.description }} />
+                </Card.Content>
+              </Card>
+            ))}
 
-      <Modal
+            <Modal
               visible={modalVisible}
               onRequestClose={handleCloseModal}
               animationType="slide"
@@ -140,8 +132,9 @@ const FeedbackList = () => {
                 {selectedFeedback && (
                   <>
                     <Text style={styles.title}>{selectedFeedback.title}</Text>
-                    <RenderHTML source={{ html: selectedFeedback.description  || "<p><i>Chưa có phản hồi</i></p>" }} contentWidth={width}/>
-
+                    <RenderHTML
+                      source={{ html: selectedFeedback.description }}
+                    />
                     <Text
                       style={[
                         styles.status,
@@ -154,7 +147,7 @@ const FeedbackList = () => {
                     </Text>
                     <Text style={styles.response}>Response:</Text>
                     <RenderHTML
-                      source={{ html: selectedFeedback.response?.response  || "<p><i>Chưa có phản hồi</i></p>"}}  contentWidth={width}
+                      source={{ html: selectedFeedback.response?.response }}
                     />
                   </>
                 )}
@@ -168,6 +161,59 @@ const FeedbackList = () => {
               </View>
             </Modal>
 
+            <Modal
+              visible={createModalVisible}
+              onRequestClose={() => setCreateModalVisible(false)}
+              animationType="slide"
+            >
+              <View style={styles.modalContainer}>
+                <Text style={[styles.title, { textAlign: "center" }]}>
+                  Tạo phản ánh mới
+                </Text>
+
+                <TextInput
+                  mode="outlined"
+                  label="Tiêu đề"
+                  value={newFeedback.title}
+                  onChangeText={(text) =>
+                    setNewFeedback((prev) => ({ ...prev, title: text }))
+                  }
+                  style={styles.input}
+                />
+
+                <TextInput
+                  mode="outlined"
+                  label="Nội dung"
+                  value={newFeedback.description}
+                  onChangeText={(text) =>
+                    setNewFeedback((prev) => ({ ...prev, description: text }))
+                  }
+                  style={styles.input}
+                />
+
+                <View style={styles.buttonContainer}>
+                  <Button
+                    mode="outlined"
+                    onPress={() => setCreateModalVisible(false)}
+                    style={styles.button}
+                  >
+                    Hủy
+                  </Button>
+                  <Button
+                    mode="contained"
+                    onPress={createFeedback}
+                    loading={submitting}
+                    disabled={submitting}
+                    style={styles.button}
+                  >
+                    Gửi
+                  </Button>
+                </View>
+              </View>
+            </Modal>
+          </ScrollView>
+        </>
+      )}
 
       <View>
         <Button
@@ -178,57 +224,6 @@ const FeedbackList = () => {
           Tạo phản ánh mới
         </Button>
       </View>
-
-      <Modal
-        visible={createModalVisible}
-        onRequestClose={() => setCreateModalVisible(false)}
-        animationType="slide"
-      >
-        <View style={styles.modalContainer}>
-          <Text style={[styles.title, { textAlign: "center" }]}>
-            Tạo phản ánh mới
-          </Text>
-
-          <TextInput
-            mode="outlined"
-            label="Tiêu đề"
-            value={newFeedback.title}
-            onChangeText={(text) =>
-              setNewFeedback((prev) => ({ ...prev, title: text }))
-            }
-            style={styles.input}
-          />
-
-          <TextInput
-            mode="outlined"
-            label="Nội dung"
-            value={newFeedback.description}
-            onChangeText={(text) =>
-              setNewFeedback((prev) => ({ ...prev, description: text }))
-            }
-            style={styles.input}
-          />
-
-          <View style={styles.buttonContainer}>
-            <Button
-              mode="outlined"
-              onPress={() => setCreateModalVisible(false)}
-              style={styles.button}
-            >
-              Hủy
-            </Button>
-            <Button
-              mode="contained"
-              onPress={createFeedback}
-              loading={submitting}
-              disabled={submitting}
-              style={styles.button}
-            >
-              Gửi
-            </Button>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 };
@@ -242,11 +237,6 @@ const styles = StyleSheet.create({
     margin: 5,
     marginBottom: 10,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   modalContainer: {
     flex: 1,
     padding: 20,
@@ -256,8 +246,27 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
   },
+  description: {
+    fontSize: 16,
+    marginVertical: 10,
+  },
+  status: {
+    fontSize: 16,
+    marginVertical: 10,
+    fontWeight: "bold",
+  },
+  response: {
+    fontSize: 16,
+    marginVertical: 10,
+    fontStyle: "italic",
+  },
   subtitle: {
     fontWeight: "bold",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
   input: {
     marginBottom: 15,

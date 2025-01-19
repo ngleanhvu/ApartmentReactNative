@@ -13,16 +13,76 @@ import ActiveUser from "./components/User/ActiveUser";
 import PayMonthlyFee from "./components/MonthlyFee/PayMonthlyFee";
 import Login from "./components/User/Login";
 import { StripeProvider } from "@stripe/stripe-react-native";
-import FeedbackList from "./components/Feedback/Feedback";
+import MonthlyFee from "./components/MonthlyFee/MonthlyFee";
+import Transaction from "./components/MonthlyFee/MonthlyFee";
+import MonthlyFeeDetail from "./components/MonthlyFee/MonthlyFeeDetail";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import RegisterVehicleCard from "./components/VehicleCard/RegisterVehicleCard";
+import ListVehicleCards from "./components/VehicleCard/ListVehicleCards";
+import Chat from "./components/Chat/Chat";
+import Profile from "./components/User/Profile";
+import * as Notifications from "expo-notifications";
+import { useEffect } from "react";
+import NotificationDetail from "./components/Home/NotificationDetail";
+import FeedbackList from "./components/Feedback/FeedBack";
 import StorageLocker from "./components/StorageLocker/StorageLocker";
-import Survey from "./components/Survey/Surveys";
+import Survey from "./components/Survey/Survey";
 
+const Stack = createNativeStackNavigator();
 
+const TransactionStack = () => (
+  <Stack.Navigator>
+    <Stack.Screen
+      name="Monthly fee"
+      component={MonthlyFee}
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen
+      name="Monthly fee detail"
+      component={MonthlyFeeDetail}
+      options={{ headerShown: false }}
+    />
+  </Stack.Navigator>
+);
 
+const VehicleNativeStack = createNativeStackNavigator();
+
+const VehicleStack = () => (
+  <VehicleNativeStack.Navigator>
+    <VehicleNativeStack.Screen
+      name="Register vehicle card"
+      component={RegisterVehicleCard}
+      options={{ headerShown: false }}
+    />
+    <VehicleNativeStack.Screen
+      name="List vehicle cards"
+      component={ListVehicleCards}
+      options={{ headerShown: false }}
+    />
+  </VehicleNativeStack.Navigator>
+);
+
+const HomeDrawer = createDrawerNavigator();
+
+const HomeStack = () => (
+  <HomeDrawer.Navigator>
+    <HomeDrawer.Screen
+      name="Home"
+      component={Home}
+      options={{ headerShown: false }}
+    />
+    <HomeDrawer.Screen
+      name="Notification Detail"
+      component={NotificationDetail}
+      options={{ headerShown: false }}
+    />
+  </HomeDrawer.Navigator>
+);
 const Drawer = createDrawerNavigator();
 
 const CustomDrawerContent = (props) => {
   const [user, dispatch] = React.useContext(Contexts);
+
   return (
     <DrawerContentScrollView {...props}>
       <DrawerItemList {...props} />
@@ -30,14 +90,13 @@ const CustomDrawerContent = (props) => {
         <Button
           title="Logout"
           onPress={() => {
-            dispatch({ type: "logout" }); // Cập nhật trạng thái đăng xuất
+            dispatch({ type: "logout" });
           }}
         />
       )}
     </DrawerContentScrollView>
   );
 };
-
 
 const App = () => {
   const [user, dispatch] = useReducer(MyUserReducer, null);
@@ -50,17 +109,26 @@ const App = () => {
             initialRouteName="Home"
             drawerContent={(props) => <CustomDrawerContent {...props} />}
           >
-            <Drawer.Screen name="Home" component={Home} />
+            <Drawer.Screen name="Home" component={HomeStack} />
             {user ? (
               <>
-                <Drawer.Screen name={user.username} component={Home} />
+                <Drawer.Screen name={"Profile"} component={Profile} />
                 <Drawer.Screen
                   name="Pay monthly fee"
                   component={PayMonthlyFee}
                 />
+                <Drawer.Screen
+                  name="Transaction"
+                  component={TransactionStack}
+                />
+                <Drawer.Screen name="Vehicle card" component={VehicleStack} />
+                <Drawer.Screen name="Chat" component={Chat}></Drawer.Screen>
                 <Drawer.Screen name="Feedback" component={FeedbackList} />
-                <Drawer.Screen name="Storage Locker" component={StorageLocker} />
-                <Drawer.Screen name="Survey" component={Survey}/>
+                <Drawer.Screen
+                  name="Storage Locker"
+                  component={StorageLocker}
+                />
+                <Drawer.Screen name="Survey" component={Survey} />
               </>
             ) : (
               <>

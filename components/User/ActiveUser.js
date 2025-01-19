@@ -12,6 +12,7 @@ import Styles from "./Styles";
 import * as ImagePicker from "expo-image-picker";
 import APIs, { authApis, endpoints } from "../../configs/APIs";
 import _ from "lodash";
+import debounce from "../../utils/debounce";
 
 const ActiveUser = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
@@ -28,50 +29,51 @@ const ActiveUser = ({ navigation }) => {
     });
   };
 
-  const activeUser = useCallback(
-    _.debounce(async () => {
-      setLoading(true);
-      try {
-        let form = new FormData();
-        for (let key in user) {
-          if (key === "avatar") {
-            form.append("avatar", {
-              uri: user["avatar"].uri,
-              name: user["avatar"].fileName,
-              type: user["avatar"].uri.type,
-            });
-          } else {
-            form.append(key, user[key]);
-          }
+  const activeUser = async () => {
+    setLoading(true);
+    try {
+      console.log(user.avatar);
+      let form = new FormData();
+      for (let key in user) {
+        if (key === "avatar") {
+          form.append("avatar", {
+            uri: user.avatar.uri,
+            name: user.avatar.fileName,
+            type: user.avatar.type,
+          });
+        } else {
+          form.append(key, user[key]);
         }
-
-        const res = await APIs.post(endpoints["active-user"], form, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        });
-
-        if (res.status === 200) {
-          alert("Thành công! Vui lòng đăng nhập.");
-          navigation.navigate("Login");
-        } else if (res.status === 202) {
-          alert("Tài khoản đã kích hoạt trước đó");
-          navigation.navigate("Login");
-        }
-      } catch (error) {
-        console.log(error);
-      } finally {
-        setLoading(false);
-        setUser({
-          phone: "",
-          password: "",
-          retype_password: "",
-          avatar: "",
-        });
       }
-    }, 1000),
-    [user, navigation]
-  );
+      console.log(user["avatar"]);
+      console.log(form);
+      const res = await APIs.post(endpoints["active-user"], form, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      if (res.status === 200) {
+        alert("Thành công! Vui lòng đăng nhập.");
+      } else if (res.status === 202) {
+        alert("Tài khoản đã kích hoạt trước đó");
+      } else {
+        alert("Kích hoạt người dùng thất bại!");
+      }
+      navigation.navigate("Login");
+    } catch (error) {
+      console.log(error);
+      alert("Kích hoạt người dùng thất bại!");
+    } finally {
+      setLoading(false);
+      setUser({
+        phone: "",
+        password: "",
+        retype_password: "",
+        avatar: "",
+      });
+    }
+  };
 
   const pickImage = async () => {
     let { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -79,11 +81,14 @@ const ActiveUser = ({ navigation }) => {
       alert("Permissions denied!");
     } else {
       const result = await ImagePicker.launchImageLibraryAsync();
+      console.log(result);
       if (!result.canceled) {
         change("avatar", result.assets[0]);
       }
     }
   };
+
+  const handleActiveUser = debounce(activeUser, 1000);
 
   return (
     <View style={styles.container}>
@@ -95,22 +100,24 @@ const ActiveUser = ({ navigation }) => {
           <TextInput
             value={user.phone}
             onChangeText={(t) => change("phone", t)}
-            placeholder="Số điện thoại"
-            style={Styles.input}
+            label="Số điện thoại"
+            style={styles.margin}
           />
           <TextInput
             value={user.password}
             onChangeText={(t) => change("password", t)}
-            placeholder="Mật khẩu"
-            style={Styles.input}
+            label="Mật khẩu"
             secureTextEntry={true}
+            right={<TextInput.Icon icon="eye" />}
+            style={styles.margin}
           />
           <TextInput
             value={user.retype_password}
             onChangeText={(t) => change("retype_password", t)}
-            placeholder="Xác nhận mật khẩu"
-            style={Styles.input}
+            label="Xác nhận mật khẩu"
             secureTextEntry={true}
+            right={<TextInput.Icon icon="eye" />}
+            style={styles.margin}
           />
           <TouchableOpacity style={Styles.button} onPress={pickImage}>
             <Text style={Styles.text}>Chọn đại diện</Text>
@@ -130,7 +137,7 @@ const ActiveUser = ({ navigation }) => {
           ) : (
             ""
           )}
-          <TouchableOpacity style={Styles.button} onPress={activeUser}>
+          <TouchableOpacity style={Styles.button} onPress={handleActiveUser}>
             <Text style={Styles.text}>Kích hoạt</Text>
           </TouchableOpacity>
         </>
