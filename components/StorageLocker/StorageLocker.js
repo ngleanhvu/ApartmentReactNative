@@ -12,6 +12,7 @@ import {
 } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SearchBar } from "react-native-screens";
+import { RefreshControl } from "react-native";
 
 const StorageLocker = () => {
   const [storageLockers, setStorageLockers] = useState([]);
@@ -82,8 +83,14 @@ const StorageLocker = () => {
   }, []);
 
   useEffect(() => {
-    loadPackages();
+    let timer = setTimeout(() => loadPackages(), 500);
+    return () => clearTimeout(timer);
   }, [q, page]);
+
+  const onRefresh = () => {
+    loadPackages();
+    loadStorageLocker();
+  };
 
   const getCloudinaryUrl = (thumbnailPath) => {
     if (thumbnailPath?.startsWith("http")) {
@@ -105,7 +112,12 @@ const StorageLocker = () => {
             onChangeText={(k) => search(k, setQ)}
             style={styles.searchBar}
           />
-          <ScrollView onScroll={loadMore}>
+          <ScrollView
+            onScroll={loadMore}
+            refreshControl={
+              <RefreshControl refreshing={loading} onRefresh={onRefresh} />
+            }
+          >
             {loading && <ActivityIndicator />}
             {packages.map((packages) => (
               <Card key={packages.id} style={styles.card}>

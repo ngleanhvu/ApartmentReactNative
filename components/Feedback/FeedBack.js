@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet, Modal, ScrollView } from "react-native";
+import {
+  View,
+  StyleSheet,
+  Modal,
+  ScrollView,
+  RefreshControl,
+} from "react-native";
 import {
   Avatar,
   Card,
@@ -12,20 +18,20 @@ import {
 import { authApis } from "../../configs/APIs";
 import { endpoints } from "../../configs/APIs";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import RenderHTMLf, { RenderHTML } from "react-native-render-html";
+import { RenderHTML } from "react-native-render-html";
 
 const FeedbackList = () => {
   const [feedbacks, setFeedbacks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedFeedback, setSelectedFeedback] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [page, setPage] = useState(1);
   const [newFeedback, setNewFeedback] = useState({
     title: "",
     description: "",
   });
   const [submitting, setSubmitting] = useState(false);
   const [createModalVisible, setCreateModalVisible] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadFeedbacks = async () => {
     try {
@@ -41,7 +47,8 @@ const FeedbackList = () => {
   };
 
   useEffect(() => {
-    loadFeedbacks();
+    let timer = setTimeout(() => loadFeedbacks(), 500);
+    return () => clearTimeout(timer);
   }, []);
 
   const createFeedback = async () => {
@@ -57,13 +64,11 @@ const FeedbackList = () => {
       const api = await authApis(token);
       await api.post(endpoints.feedbacks, newFeedback);
 
-      // Reset form và đóng modal
       setNewFeedback({ title: "", description: "" });
       setCreateModalVisible(false);
-
       loadFeedbacks();
     } catch (error) {
-      console.error("Error creating feedback:", error.message);
+      console.log("Error creating feedback:", error.message);
       alert("Có lỗi xảy ra khi tạo phản ánh");
     } finally {
       setSubmitting(false);
@@ -80,6 +85,12 @@ const FeedbackList = () => {
     setSelectedFeedback(null);
   };
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadFeedbacks();
+    setRefreshing(false);
+  };
+
   return (
     <View style={styles.container}>
       {loading ? (
@@ -87,132 +98,135 @@ const FeedbackList = () => {
           <ActivityIndicator size="large" animating={loading} color="#0000ff" />
         </View>
       ) : (
-        <>
-          <ScrollView>
-            {feedbacks.map((feedback) => (
-              <Card
-                key={feedback.id}
-                style={styles.card}
-                onPress={() => handleCardPress(feedback)} // Mở modal khi nhấn vào card
-              >
-                <Card.Title
-                  title={feedback.title}
-                  subtitle={
-                    <Text
-                      style={[
-                        styles.subtitle,
-                        {
-                          color:
-                            feedback.status === "Resolved" ? "green" : "red",
-                        },
-                      ]}
-                    >
-                      {feedback.status}
-                    </Text>
-                  }
-                  left={(props) => (
-                    <Avatar.Icon {...props} icon="alpha-f-box-outline" />
-                  )}
-                  right={(props) => (
-                    <IconButton {...props} icon="dots-vertical" />
-                  )}
-                />
-                <Card.Content>
-                  <RenderHTML source={{ html: feedback.description }} />
-                </Card.Content>
-              </Card>
-            ))}
-
-            <Modal
-              visible={modalVisible}
-              onRequestClose={handleCloseModal}
-              animationType="slide"
+        <ScrollView
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
+          {feedbacks.map((feedback) => (
+            <Card
+              key={feedback.id}
+              style={styles.card}
+              onPress={() => handleCardPress(feedback)}
             >
-              <View style={styles.modalContainer}>
-                {selectedFeedback && (
-                  <>
-                    <Text style={styles.title}>{selectedFeedback.title}</Text>
-                    <RenderHTML
-                      source={{ html: selectedFeedback.description }}
-                    />
-                    <Text
-                      style={[
-                        styles.status,
-                        selectedFeedback.status === "Resolved"
-                          ? { color: "green" }
-                          : { color: "red" },
-                      ]}
-                    >
-                      Status: {selectedFeedback.status}
-                    </Text>
-                    <Text style={styles.response}>Response:</Text>
-                    <RenderHTML
-                      source={{ html: selectedFeedback.response?.response }}
-                    />
-                  </>
+              <Card.Title
+                title={feedback.title}
+                subtitle={
+                  <Text
+                    style={[
+                      styles.subtitle,
+                      {
+                        color: feedback.status === "Resolved" ? "green" : "red",
+                      },
+                    ]}
+                  >
+                    {feedback.status || "Pending"}
+                  </Text>
+                }
+                left={(props) => (
+                  <Avatar.Icon {...props} icon="alpha-f-box-outline" />
                 )}
+                right={(props) => (
+                  <IconButton {...props} icon="dots-vertical" />
+                )}
+              />
+              <Card.Content>
+                <RenderHTML source={{ html: feedback.description }} />
+              </Card.Content>
+            </Card>
+          ))}
+
+          <Modal
+            visible={modalVisible}
+            onRequestClose={handleCloseModal}
+            animationType="slide"
+          >
+            <View style={styles.modalContainer}>
+              {selectedFeedback && (
+                <>
+                  <Text style={styles.title}>{selectedFeedback.title}</Text>
+                  <RenderHTML source={{ html: selectedFeedback.description }} />
+                  <Text
+                    style={[
+                      styles.status,
+                      selectedFeedback.status === "Resolved"
+                        ? { color: "green" }
+                        : { color: "red" },
+                    ]}
+                  >
+                    Status: {selectedFeedback.status || "Pending"}
+                  </Text>
+                  <Text style={styles.response}>Response:</Text>
+                  {selectedFeedback.response?.response ? (
+                    <RenderHTML
+                      source={{ html: selectedFeedback.response.response }}
+                    />
+                  ) : (
+                    <Text>No response provided yet.</Text>
+                  )}
+                </>
+              )}
+              <Button
+                mode="contained"
+                onPress={handleCloseModal}
+                style={styles.createButton}
+              >
+                Close
+              </Button>
+            </View>
+          </Modal>
+
+          <Modal
+            visible={createModalVisible}
+            onRequestClose={() => setCreateModalVisible(false)}
+            animationType="slide"
+          >
+            <View style={styles.modalContainer}>
+              <Text style={[styles.title, { textAlign: "center" }]}>
+                Tạo phản ánh mới
+              </Text>
+
+              <TextInput
+                mode="outlined"
+                label="Tiêu đề"
+                value={newFeedback.title}
+                onChangeText={(text) =>
+                  setNewFeedback((prev) => ({ ...prev, title: text }))
+                }
+                style={styles.input}
+              />
+
+              <TextInput
+                mode="outlined"
+                label="Nội dung"
+                value={newFeedback.description}
+                onChangeText={(text) =>
+                  setNewFeedback((prev) => ({ ...prev, description: text }))
+                }
+                style={styles.input}
+              />
+
+              <View style={styles.buttonContainer}>
+                <Button
+                  mode="outlined"
+                  onPress={() => setCreateModalVisible(false)}
+                  style={styles.button}
+                >
+                  Hủy
+                </Button>
                 <Button
                   mode="contained"
-                  onPress={handleCloseModal}
-                  style={styles.createButton}
+                  onPress={createFeedback}
+                  loading={submitting}
+                  disabled={submitting}
+                  style={styles.button}
                 >
-                  Close
+                  Gửi
                 </Button>
               </View>
-            </Modal>
-
-            <Modal
-              visible={createModalVisible}
-              onRequestClose={() => setCreateModalVisible(false)}
-              animationType="slide"
-            >
-              <View style={styles.modalContainer}>
-                <Text style={[styles.title, { textAlign: "center" }]}>
-                  Tạo phản ánh mới
-                </Text>
-
-                <TextInput
-                  mode="outlined"
-                  label="Tiêu đề"
-                  value={newFeedback.title}
-                  onChangeText={(text) =>
-                    setNewFeedback((prev) => ({ ...prev, title: text }))
-                  }
-                  style={styles.input}
-                />
-
-                <TextInput
-                  mode="outlined"
-                  label="Nội dung"
-                  value={newFeedback.description}
-                  onChangeText={(text) =>
-                    setNewFeedback((prev) => ({ ...prev, description: text }))
-                  }
-                  style={styles.input}
-                />
-
-                <View style={styles.buttonContainer}>
-                  <Button
-                    mode="outlined"
-                    onPress={() => setCreateModalVisible(false)}
-                    style={styles.button}
-                  >
-                    Hủy
-                  </Button>
-                  <Button
-                    mode="contained"
-                    onPress={createFeedback}
-                    loading={submitting}
-                    disabled={submitting}
-                    style={styles.button}
-                  >
-                    Gửi
-                  </Button>
-                </View>
-              </View>
-            </Modal>
-          </ScrollView>
-        </>
+            </View>
+          </Modal>
+        </ScrollView>
       )}
 
       <View>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { authApis, endpoints } from "../../configs/APIs";
-import { View, StyleSheet, ScrollView } from "react-native";
+import { View, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   Card,
@@ -10,35 +10,29 @@ import {
   Button,
   Badge,
   Avatar,
-  IconButton,
 } from "react-native-paper";
 import debounce from "../../utils/debounce";
+import { RefreshControl } from "react-native";
 
 const Survey = () => {
   const [surveys, setSurveys] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [answers, setAnswers] = useState({}); // Thêm state answers
+  const [refreshing, setRefreshing] = useState(false);
+  const [answers, setAnswers] = useState({});
   const [selectedSurvey, setSelectedSurvey] = useState(null);
-  const [modalVisible, setModalVisible] = useState(false);
 
   const loadSurveys = async () => {
+    setLoading(true);
     try {
       const token = await AsyncStorage.getItem("access_token");
       const api = await authApis(token);
       const response = await api.get(endpoints.surveys);
       setSurveys(response.data);
     } catch (ex) {
-      console.error(ex);
+      console.error("Error loading surveys:", ex);
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleAnswer = (questionId, optionId) => {
-    setAnswers((prev) => ({
-      ...prev,
-      [questionId]: optionId,
-    }));
   };
 
   const loadSurveyDetails = async (surveyId) => {
@@ -48,13 +42,15 @@ const Survey = () => {
       const response = await api.get(endpoints["survey-details"](surveyId));
       setSelectedSurvey(response.data);
     } catch (ex) {
-      console.error(ex);
+      console.error("Error loading survey details:", ex);
     }
   };
 
-  useEffect(() => {
-    loadSurveys();
-  }, []);
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadSurveys();
+    setRefreshing(false);
+  };
 
   const handleCardPress = async (survey) => {
     setLoading(true);
@@ -74,104 +70,105 @@ const Survey = () => {
         })
       );
 
-      const response = await api.post(
-        endpoints["submit-survey"](selectedSurvey.id),
-        { answers: formattedAnswers }
-      );
+      await api.post(endpoints["submit-survey"](selectedSurvey.id), {
+        answers: formattedAnswers,
+      });
 
       alert("Gửi khảo sát thành công!");
-      handleCloseModal();
+      setSelectedSurvey(null);
     } catch (error) {
-      console.error(error);
+      console.error("Error submitting survey:", error);
       alert("Có lỗi xảy ra khi gửi khảo sát.");
     }
   };
 
+  // Gọi hàm debounce cho submit
   const handleSubmitSurvey = debounce(submitSurvey, 1000);
 
-  const handleCloseModal = () => {
-    setModalVisible(false);
-    setSelectedSurvey(null);
-  };
+  useEffect(() => {
+    let timer = setTimeout(() => loadSurveys(), 500);
+    return () => clearTimeout(timer);
+  }, []);
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <Text>Đang tải...</Text>
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#0000ff" />
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <ScrollView>
-        {surveys.map((s) => (
-          <View key={s.id}>
-            <Card style={styles.card} onPress={() => handleCardPress(s)}>
+      <ScrollView
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        {surveys.length === 0 ? (
+          <Text style={styles.emptyText}>Không có khảo sát nào!</Text>
+        ) : (
+          surveys.map((s) => (
+            <Card
+              key={s.id}
+              style={styles.card}
+              onPress={() => handleCardPress(s)}
+            >
               <Card.Title
                 title={s.title}
-                titleStyle={styles.title}
                 left={(props) => (
                   <Avatar.Icon {...props} icon="database-search-outline" />
                 )}
               />
               <Card.Content>
-                <View>
-                  <Badge
-                    style={[
-                      styles.status,
-                      {
-                        backgroundColor:
-                          s.status === "Published" ? "green" : "red",
-                      },
-                    ]}
-                  >
-                    Tình trạng: {s.status}
-                  </Badge>
-                </View>
-                <Text style={styles.description}>
-                  Nội dung: {s.description}
-                </Text>
+                <Badge
+                  style={[
+                    styles.status,
+                    {
+                      backgroundColor:
+                        s.status === "Published" ? "green" : "red",
+                    },
+                  ]}
+                >
+                  Tình trạng: {s.status}
+                </Badge>
+                <Text style={styles.description}>{s.description}</Text>
                 <Text style={styles.dateText}>
-                  Thời gian :{" "}
+                  Thời gian:{" "}
                   {new Date(s.start_date).toLocaleDateString("vi-VN")} -{" "}
                   {new Date(s.end_date).toLocaleDateString("vi-VN")}
                 </Text>
               </Card.Content>
             </Card>
-          </View>
-        ))}
+          ))
+        )}
       </ScrollView>
 
       <Modal
         visible={selectedSurvey !== null}
-        onRequestClose={handleCloseModal}
-        animationType="slide"
+        onDismiss={() => setSelectedSurvey(null)}
       >
         <View style={styles.modalContainer}>
           {selectedSurvey && selectedSurvey.questions && (
             <>
-              <Text style={styles.modalTitle}>
-                Khảo sát về: {selectedSurvey.title}{" "}
-              </Text>
-              <ScrollView style={styles.modalContent}>
-                {selectedSurvey.questions.map((question, index) => (
+              <Text style={styles.modalTitle}>{selectedSurvey.title}</Text>
+              <ScrollView>
+                {selectedSurvey.questions.map((question) => (
                   <View key={question.id} style={styles.questionContainer}>
-                    <Text style={styles.questionText}>
-                      Câu {index + 1}: {question.content}
-                    </Text>
+                    <Text style={styles.questionText}>{question.content}</Text>
                     <RadioButton.Group
-                      onValueChange={(value) =>
-                        handleAnswer(question.id, value)
-                      }
                       value={answers[question.id]}
+                      onValueChange={(value) =>
+                        setAnswers((prev) => ({
+                          ...prev,
+                          [question.id]: value,
+                        }))
+                      }
                     >
                       {question.options.map((option) => (
                         <View key={option.id} style={styles.optionContainer}>
                           <RadioButton value={option.id} />
-                          <Text style={styles.optionText}>
-                            {option.content}
-                          </Text>
+                          <Text>{option.content}</Text>
                         </View>
                       ))}
                     </RadioButton.Group>
@@ -184,11 +181,11 @@ const Survey = () => {
                   onPress={handleSubmitSurvey}
                   style={styles.submitButton}
                 >
-                  Gửi kết quả
+                  Gửi
                 </Button>
                 <Button
                   mode="outlined"
-                  onPress={handleCloseModal}
+                  onPress={() => setSelectedSurvey(null)}
                   style={styles.closeButton}
                 >
                   Đóng
